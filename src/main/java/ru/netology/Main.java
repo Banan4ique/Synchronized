@@ -10,9 +10,9 @@ public class Main {
     public static final Map<Integer, Integer> sizeToFreq = new HashMap<>();
     public static final int numberRoutes = 1000;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         for (int i = 0; i < numberRoutes; i++) {
-            new Thread(() -> {
+            Thread thread = new Thread(() -> {
                 synchronized (sizeToFreq) {
                     String route = generateRoute("RLRFR", 100);
                     int numberR = (int) route.chars().filter(x -> (char) x == 'R')
@@ -24,7 +24,9 @@ public class Main {
                     }
                     System.out.println(numberR);
                 }
-            }).start();
+            });
+            thread.start();
+            thread.join();
         }
 
         new Thread(() -> {
