@@ -3,7 +3,6 @@ package ru.netology;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Main {
 
@@ -11,6 +10,24 @@ public class Main {
     public static final int numberRoutes = 1000;
 
     public static void main(String[] args) {
+        Thread thread = new Thread(() -> {
+            synchronized (sizeToFreq) {
+                while (!Thread.interrupted()) {
+                    try {
+                        sizeToFreq.wait();
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                    Map.Entry<Integer, Integer> currentMax = sizeToFreq.entrySet().stream()
+                            .max(Map.Entry.<Integer, Integer>comparingByValue())
+                            .get();
+                    System.out.printf("Текущее самое частое количество повторений %d (встретилось %d раз)\n",
+                            currentMax.getKey(), currentMax.getValue());
+                }
+            }
+        });
+        thread.start();
+
         for (int i = 0; i < numberRoutes; i++) {
             new Thread(() -> {
                 synchronized (sizeToFreq) {
@@ -23,9 +40,11 @@ public class Main {
                         sizeToFreq.put(numberR, sizeToFreq.get(numberR) + 1);
                     }
                     System.out.println(numberR);
+                    sizeToFreq.notify();
                 }
             }).start();
         }
+        thread.interrupt();
 
         new Thread(() -> {
             synchronized (sizeToFreq) {
